@@ -1,0 +1,1500 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POM-2 // FILE_MANAGER.EXE</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --screen: #111411;
+      --window: #242925;
+      --beige: #c8c4b8;
+      --beige-dark: #77796f;
+      --beige-light: #eeece2;
+      --olive: #343a32;
+      --olive-dark: #1b201c;
+      --amber: #e59838;
+      --green: #4af626;
+      --text: #d3d2c8;
+      --muted: #9b9e91;
+      --line: #4b5148;
+      --shadow: #080a08;
+      --mono: "Lucida Console", "Cascadia Mono", "Courier New", monospace;
+      --pixel: "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 700px;
+      min-height: 100vh;
+      overflow: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 50% 30%, #30372d 0%, #171b17 60%, #0c0e0c 100%);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    .desktop {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100vh;
+      padding: 28px;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(255,255,255,.018) 0,
+          rgba(255,255,255,.018) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+    }
+
+    .explorer {
+      display: flex;
+      flex-direction: column;
+      width: min(1200px, calc(100vw - 56px));
+      height: min(790px, calc(100vh - 56px));
+      min-height: 520px;
+      overflow: hidden;
+      border: 3px solid;
+      border-color: var(--beige-light) var(--beige-dark) var(--beige-dark) var(--beige-light);
+      background: var(--window);
+      box-shadow:
+        3px 3px 0 #090b09,
+        12px 17px 45px rgba(0, 0, 0, .56),
+        inset 0 0 35px rgba(0, 0, 0, .2);
+      transition: width 180ms ease, height 180ms ease;
+    }
+
+    .explorer.maximized {
+      position: fixed;
+      z-index: 20;
+      inset: 8px;
+      width: auto;
+      height: auto;
+    }
+
+    .explorer.minimized {
+      display: none;
+    }
+
+    .titlebar {
+      display: flex;
+      flex: 0 0 34px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 3px 5px 3px 9px;
+      color: #141711;
+      background:
+        repeating-linear-gradient(90deg, #c8c4b8 0 2px, #b9b7aa 2px 4px);
+      border-bottom: 2px solid #67695f;
+      user-select: none;
+    }
+
+    .title {
+      overflow: hidden;
+      font-family: var(--pixel);
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: .04em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .window-controls {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 4px;
+    }
+
+    .window-control {
+      display: grid;
+      place-items: center;
+      width: 25px;
+      height: 23px;
+      border: 2px solid;
+      border-color: var(--beige-light) #56584f #56584f var(--beige-light);
+      color: #171a16;
+      background: var(--beige);
+      font-family: "Segoe UI Symbol", "Noto Sans Runic", Georgia, serif;
+      font-size: 15px;
+      font-weight: bold;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .window-control:active,
+    .toolbar-button:active {
+      border-color: #56584f var(--beige-light) var(--beige-light) #56584f;
+      transform: translate(1px, 1px);
+    }
+
+    .menubar {
+      display: flex;
+      flex: 0 0 29px;
+      align-items: center;
+      gap: 5px;
+      padding: 0 8px;
+      border-bottom: 1px solid #111511;
+      color: #d5d4c9;
+      background: #333a33;
+    }
+
+    .menu-button {
+      height: 24px;
+      padding: 0 9px;
+      border: 1px solid transparent;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .menu-button:hover,
+    .menu-button:focus-visible {
+      border-color: var(--amber);
+      color: var(--amber);
+      outline: none;
+    }
+
+    .toolbar {
+      display: flex;
+      flex: 0 0 48px;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 8px;
+      border-bottom: 2px solid #101410;
+      background: #292f29;
+    }
+
+    .toolbar-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      min-width: 35px;
+      padding: 0 8px;
+      border: 2px solid;
+      border-color: #d0ccbf #666960 #666960 #d0ccbf;
+      color: #e2dfd4;
+      background: #343a33;
+      cursor: pointer;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .toolbar-button:hover {
+      color: var(--amber);
+      background: #3c433b;
+    }
+
+    .toolbar-button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .toolbar-icon {
+      color: var(--amber);
+      font-size: 15px;
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 27px;
+      margin: 0 4px;
+      background: #62675d;
+      box-shadow: 1px 0 #171b17;
+    }
+
+    .address-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 9px;
+      border-bottom: 2px solid #101410;
+      background: #222822;
+    }
+
+    .address-label {
+      color: var(--amber);
+      font-family: var(--pixel);
+      font-weight: bold;
+      letter-spacing: .06em;
+    }
+
+    .address-input {
+      width: 100%;
+      height: 28px;
+      padding: 0 8px;
+      border: 2px solid;
+      border-color: #101410 #72766c #72766c #101410;
+      outline: none;
+      color: var(--green);
+      background: #101510;
+      font-size: 11px;
+      letter-spacing: .03em;
+    }
+
+    .address-input:focus {
+      box-shadow: 0 0 0 1px rgba(74, 246, 38, .25);
+    }
+
+    .address-input::selection {
+      color: #101510;
+      background: var(--green);
+    }
+
+    .go-button {
+      height: 28px;
+      padding: 0 12px;
+      border: 2px solid;
+      border-color: var(--beige-light) #666960 #666960 var(--beige-light);
+      color: #171a16;
+      background: var(--beige);
+      cursor: pointer;
+      font-family: var(--pixel);
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 215px minmax(290px, 1fr) 248px;
+      flex: 1;
+      min-height: 0;
+      border-bottom: 2px solid #0e120e;
+    }
+
+    .sidebar,
+    .file-area,
+    .inspector {
+      min-width: 0;
+      min-height: 0;
+      background: #252b25;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid #111511;
+      box-shadow: inset -1px 0 #53594f;
+    }
+
+    .pane-heading {
+      flex: 0 0 27px;
+      display: flex;
+      align-items: center;
+      padding: 0 9px;
+      border-bottom: 1px solid #111511;
+      color: var(--amber);
+      background: #333a33;
+      font-family: var(--pixel);
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .tree {
+      flex: 1;
+      overflow: auto;
+      padding: 8px 6px 12px;
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      min-height: 27px;
+      padding: 3px 5px;
+      border: 0;
+      color: #cfcec3;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .tree-item:hover {
+      color: var(--green);
+      background: rgba(74, 246, 38, .06);
+    }
+
+    .tree-item.active {
+      color: #171711;
+      background: var(--amber);
+    }
+
+    .tree-indent {
+      display: inline-block;
+      width: 11px;
+      height: 16px;
+      border-left: 1px dotted #777b70;
+      border-bottom: 1px dotted #777b70;
+      flex: 0 0 11px;
+    }
+
+    .folder-icon {
+      color: var(--amber);
+      font-size: 14px;
+    }
+
+    .tree-item.active .folder-icon {
+      color: #32230e;
+    }
+
+    .storage-box {
+      flex: 0 0 auto;
+      margin: 8px;
+      padding: 9px;
+      border: 2px solid;
+      border-color: #111511 #62675d #62675d #111511;
+      background: #1b211b;
+    }
+
+    .storage-title {
+      margin-bottom: 7px;
+      color: var(--amber);
+      font-family: var(--pixel);
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .storage-copy {
+      color: var(--green);
+      font-size: 9px;
+      line-height: 1.7;
+    }
+
+    .storage-meter {
+      height: 9px;
+      margin: 8px 0 5px;
+      border: 1px solid #667062;
+      background: #111510;
+    }
+
+    .storage-meter span {
+      display: block;
+      width: 61%;
+      height: 100%;
+      background: repeating-linear-gradient(90deg, #4af626 0 5px, #398c27 5px 7px);
+    }
+
+    .file-area {
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid #111511;
+    }
+
+    .file-toolbar {
+      display: flex;
+      flex: 0 0 30px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 10px;
+      border-bottom: 1px solid #111511;
+      color: var(--muted);
+      background: #2d342d;
+      font-size: 10px;
+    }
+
+    .sort-hint {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .view-label {
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    .file-viewport {
+      position: relative;
+      flex: 1;
+      overflow: auto;
+      background:
+        linear-gradient(rgba(185, 184, 164, .025) 1px, transparent 1px),
+        #1d231e;
+      background-size: 100% 24px;
+    }
+
+    .file-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .file-table th {
+      position: sticky;
+      z-index: 2;
+      top: 0;
+      height: 29px;
+      padding: 0 8px;
+      border-right: 1px solid #191e19;
+      border-bottom: 1px solid #121612;
+      color: #d7d4c8;
+      background: #3a4039;
+      font-family: var(--pixel);
+      font-size: 10px;
+      font-weight: bold;
+      text-align: left;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .file-table th:hover {
+      color: var(--amber);
+    }
+
+    .file-table th:nth-child(1) { width: 42%; }
+    .file-table th:nth-child(2) { width: 23%; }
+    .file-table th:nth-child(3) { width: 22%; }
+    .file-table th:nth-child(4) { width: 13%; }
+
+    .file-row {
+      height: 27px;
+      cursor: default;
+    }
+
+    .file-row:hover {
+      background: rgba(229, 152, 56, .12);
+    }
+
+    .file-row.selected {
+      color: #1c1a14;
+      background: var(--amber);
+    }
+
+    .file-row td {
+      overflow: hidden;
+      padding: 3px 8px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 10px;
+    }
+
+    .file-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .file-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 17px;
+      height: 17px;
+      flex: 0 0 17px;
+      color: var(--amber);
+      font-size: 13px;
+    }
+
+    .file-row.selected .file-icon {
+      color: #29200e;
+    }
+
+    .empty-folder {
+      display: none;
+      padding: 35px 15px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .grid-view {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      align-content: start;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .grid-view.active {
+      display: grid;
+    }
+
+    .grid-item {
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 7px;
+      min-height: 95px;
+      padding: 7px;
+      border: 1px solid transparent;
+      color: var(--text);
+      background: transparent;
+      cursor: default;
+      text-align: center;
+      overflow-wrap: anywhere;
+      font-size: 10px;
+    }
+
+    .grid-item:hover {
+      border-color: #6a6e5f;
+      background: rgba(229, 152, 56, .1);
+    }
+
+    .grid-item.selected {
+      border-color: #f0bf70;
+      color: #1c1a14;
+      background: var(--amber);
+    }
+
+    .grid-item .file-icon {
+      width: 37px;
+      height: 37px;
+      font-size: 26px;
+    }
+
+    .grid-item.selected .file-icon {
+      color: #29200e;
+    }
+
+    .inspector {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .inspector-content {
+      flex: 1;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .preview {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 145px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      border: 2px solid;
+      border-color: #101410 #555b50 #555b50 #101410;
+      color: var(--amber);
+      background:
+        repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,.12) 3px 4px),
+        radial-gradient(circle, #343a30, #171c17);
+    }
+
+    .preview.folder {
+      font-size: 49px;
+    }
+
+    .preview-icon {
+      font-size: 44px;
+      text-shadow: 0 0 14px rgba(229, 152, 56, .25);
+    }
+
+    .preview-text {
+      align-self: stretch;
+      width: 100%;
+      padding: 10px;
+      overflow: hidden;
+      color: var(--green);
+      font-size: 9px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .preview-name {
+      margin: 0 0 9px;
+      color: var(--amber);
+      font-size: 11px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .property-list {
+      margin: 0;
+      border-top: 1px solid #4b5147;
+    }
+
+    .property-row {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 6px;
+      padding: 7px 0;
+      border-bottom: 1px dotted #4b5147;
+      font-size: 9px;
+    }
+
+    .property-row dt {
+      color: var(--muted);
+    }
+
+    .property-row dd {
+      margin: 0;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .preview-hint {
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.6;
+    }
+
+    .statusbar {
+      display: grid;
+      grid-template-columns: 1.1fr 1.1fr 1.2fr;
+      gap: 5px;
+      flex: 0 0 29px;
+      padding: 4px 5px;
+      background: #292f29;
+    }
+
+    .status-box {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      overflow: hidden;
+      padding: 0 7px;
+      border: 1px solid;
+      border-color: #101410 #565b52 #565b52 #101410;
+      color: #c6c7bb;
+      font-size: 9px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-box strong {
+      margin-right: 4px;
+      color: var(--amber);
+      font-weight: normal;
+    }
+
+    .taskbar {
+      position: fixed;
+      z-index: 30;
+      bottom: 10px;
+      left: 50%;
+      display: none;
+      gap: 8px;
+      align-items: center;
+      height: 38px;
+      padding: 4px 9px;
+      transform: translateX(-50%);
+      border: 2px solid;
+      border-color: var(--beige-light) var(--beige-dark) var(--beige-dark) var(--beige-light);
+      color: #171a16;
+      background: #77796f;
+      box-shadow: 0 5px 15px #0008;
+    }
+
+    .taskbar.visible {
+      display: flex;
+    }
+
+    .taskbar button {
+      height: 26px;
+      padding: 0 12px;
+      border: 2px solid;
+      border-color: var(--beige-light) #56584f #56584f var(--beige-light);
+      color: #181b17;
+      background: var(--beige);
+      cursor: pointer;
+      font-family: var(--pixel);
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .taskbar button:active {
+      border-color: #56584f var(--beige-light) var(--beige-light) #56584f;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 50;
+      right: 18px;
+      bottom: 18px;
+      max-width: min(360px, calc(100vw - 36px));
+      padding: 11px 15px;
+      border: 2px solid;
+      border-color: var(--beige-light) var(--beige-dark) var(--beige-dark) var(--beige-light);
+      color: var(--green);
+      background: #171c17;
+      box-shadow: 0 7px 22px #0009;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: 160ms ease;
+      font-size: 10px;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .crt-overlay {
+      position: fixed;
+      z-index: 40;
+      inset: 0;
+      pointer-events: none;
+      opacity: .12;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, .25) 0,
+        rgba(0, 0, 0, .25) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      mix-blend-mode: multiply;
+    }
+
+    @media (max-width: 960px) {
+      body {
+        min-width: 0;
+      }
+
+      .desktop {
+        padding: 8px;
+      }
+
+      .explorer {
+        width: calc(100vw - 16px);
+        height: calc(100vh - 16px);
+      }
+
+      .main-layout {
+        grid-template-columns: 180px minmax(250px, 1fr);
+      }
+
+      .inspector {
+        display: none;
+      }
+
+      .toolbar-button .button-label {
+        display: none;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .main-layout {
+        grid-template-columns: 135px minmax(210px, 1fr);
+      }
+
+      .sidebar .pane-heading {
+        font-size: 9px;
+      }
+
+      .toolbar {
+        gap: 3px;
+        padding: 4px;
+      }
+
+      .toolbar-button {
+        min-width: 30px;
+        padding: 0 5px;
+      }
+
+      .statusbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .status-box:last-child {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="desktop">
+    <section class="explorer" id="explorer" aria-label="POM-2 file manager">
+      <header class="titlebar">
+        <div class="title">POM-2 // FILE_MANAGER.EXE</div>
+        <div class="window-controls" aria-label="Window controls">
+          <button class="window-control" id="minimizeButton" type="button"
+            aria-label="Minimize" title="Minimize (ᛁ)">ᛁ</button>
+          <button class="window-control" id="maximizeButton" type="button"
+            aria-label="Maximize" title="Maximize / restore (ᛜ)">ᛜ</button>
+          <button class="window-control" id="closeButton" type="button"
+            aria-label="Close" title="Close (ᚦ)">ᚦ</button>
+        </div>
+      </header>
+
+      <nav class="menubar" aria-label="File manager menu">
+        <button class="menu-button" data-menu="File" type="button">File</button>
+        <button class="menu-button" data-menu="Edit" type="button">Edit</button>
+        <button class="menu-button" data-menu="View" type="button">View</button>
+        <button class="menu-button" data-menu="System" type="button">System</button>
+        <button class="menu-button" data-menu="Help" type="button">Help</button>
+      </nav>
+
+      <div class="toolbar" aria-label="File actions">
+        <button class="toolbar-button" id="backButton" type="button" title="Back">
+          <span class="toolbar-icon">←</span><span class="button-label">Back</span>
+        </button>
+        <button class="toolbar-button" id="forwardButton" type="button" title="Forward">
+          <span class="toolbar-icon">→</span><span class="button-label">Forward</span>
+        </button>
+        <button class="toolbar-button" id="upButton" type="button" title="Up one level">
+          <span class="toolbar-icon">↑</span><span class="button-label">Up</span>
+        </button>
+        <span class="toolbar-separator"></span>
+        <button class="toolbar-button" id="newFolderButton" type="button" title="Create folder">
+          <span class="toolbar-icon">＋</span><span class="button-label">New Folder</span>
+        </button>
+        <button class="toolbar-button" id="deleteButton" type="button" title="Delete selected item">
+          <span class="toolbar-icon">⌫</span><span class="button-label">Delete</span>
+        </button>
+        <span class="toolbar-separator"></span>
+        <button class="toolbar-button" id="viewButton" type="button" title="Toggle list/grid view">
+          <span class="toolbar-icon">▦</span><span class="button-label">Grid View</span>
+        </button>
+      </div>
+
+      <form class="address-row" id="addressForm">
+        <label class="address-label" for="addressInput">LOCATION:</label>
+        <input class="address-input" id="addressInput" autocomplete="off" spellcheck="false">
+        <button class="go-button" type="submit">GO</button>
+      </form>
+
+      <div class="main-layout">
+        <aside class="sidebar">
+          <div class="pane-heading">Directory Tree</div>
+          <nav class="tree" id="tree" aria-label="Directory tree"></nav>
+
+          <section class="storage-box" aria-label="Drive storage">
+            <div class="storage-title">C:\ STORAGE</div>
+            <div class="storage-copy">412 GB FREE<br>SECTOR HEALTH: NOMINAL</div>
+            <div class="storage-meter"><span></span></div>
+            <div class="storage-copy">USED: 588 GB / 1 TB</div>
+          </section>
+        </aside>
+
+        <section class="file-area" aria-label="Files">
+          <div class="file-toolbar">
+            <span class="sort-hint" id="folderSummary">Directory contents</span>
+            <span class="view-label" id="viewLabel">LIST VIEW</span>
+          </div>
+
+          <div class="file-viewport" id="fileViewport">
+            <table class="file-table" id="fileTable">
+              <thead>
+                <tr>
+                  <th data-sort="name">Name</th>
+                  <th data-sort="modified">Date Modified</th>
+                  <th data-sort="type">File Type</th>
+                  <th data-sort="size">Size</th>
+                </tr>
+              </thead>
+              <tbody id="fileRows"></tbody>
+            </table>
+
+            <div class="grid-view" id="gridView"></div>
+            <div class="empty-folder" id="emptyFolder">This folder is empty.</div>
+          </div>
+        </section>
+
+        <aside class="inspector">
+          <div class="pane-heading">Preview / Inspector</div>
+          <div class="inspector-content" id="inspectorContent"></div>
+        </aside>
+      </div>
+
+      <footer class="statusbar">
+        <div class="status-box"><strong id="itemCount">0 OBJECTS</strong></div>
+        <div class="status-box"><strong id="selectedSize">NO SELECTION</strong></div>
+        <div class="status-box"><strong id="clock">31 DEC 1999 // 23:58</strong></div>
+      </footer>
+    </section>
+  </main>
+
+  <div class="taskbar" id="taskbar">
+    <span>PROGRAMS:</span>
+    <button id="restoreButton" type="button">POM-2 // FILE_MANAGER.EXE</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="crt-overlay" aria-hidden="true"></div>
+
+  <script>
+    const folder = (name, modified, children = []) => ({
+      name, type: "folder", modified, size: 0, children
+    });
+
+    const file = (name, type, size, modified, content = "") => ({
+      name, type, size, modified, content
+    });
+
+    const fileSystem = folder("Computer", "31 DEC 1999", [
+      folder("C:", "31 DEC 1999", [
+        folder("USERS", "31 DEC 1999", [
+          folder("DRIFTER", "31 DEC 1999", [
+            folder("DESKTOP", "31 DEC 1999", [
+              file("SYSTEM_README.TXT", "Text Document", 2048, "31 DEC 1999 23:41",
+                "POM-2 FILE MANAGER\n\nSystem interface online.\nSector health: nominal.\n\nWelcome, Drifter."),
+              folder("INCOMING", "30 DEC 1999", [
+                file("TRANSFER_01.ZIP", "Compressed Archive", 14900000, "30 DEC 1999 19:12")
+              ])
+            ]),
+            folder("DOWNLOADS", "31 DEC 1999", [
+              file("AUDIO_DRIVER.EXE", "Application", 38200000, "31 DEC 1999 21:06"),
+              file("HALLWAY_CAM_04.MP4", "Video Clip", 224000000, "31 DEC 1999 20:18"),
+              file("PACKAGE_1999.ZIP", "Compressed Archive", 14900000, "31 DEC 1999 19:12"),
+              file("UNKNOWN_SIGNAL.TXT", "Text Document", 1820, "31 DEC 1999 18:46",
+                "SOURCE: UNKNOWN\nFREQUENCY: 88.4 MHz\n\nDo not reply to the signal.")
+            ]),
+            folder("DOCUMENTS", "31 DEC 1999", [
+              folder("HOLLVANIA_ARCHIVE", "31 DEC 1999", [
+                file("FIELD_NOTES_12.TXT", "Text Document", 4820, "31 DEC 1999 23:12",
+                  "HOLLVANIA FIELD NOTES / 12\n\nThe streets are quiet again.\nThe receiver continues to hum after midnight.\n\n— D."),
+                file("POM2_PROTOCOLS.TXT", "Text Document", 8920, "31 DEC 1999 21:48",
+                  "POM-2 OPERATOR PROTOCOLS\n\n1. Keep the line open.\n2. Do not trust unverified packets.\n3. Report signal drift."),
+                file("SECTOR_MAP_07.PNG", "PNG Image", 2410000, "31 DEC 1999 20:03"),
+                file("RADIO_LOG_2330.TXT", "Text Document", 1620, "31 DEC 1999 23:30",
+                  "23:30 - carrier detected\n23:41 - carrier lost\n23:58 - signal returned")
+              ]),
+              file("PERSONAL_NOTES.TXT", "Text Document", 3310, "29 DEC 1999 17:20",
+                "Things to remember:\n- Check the receiver.\n- Back up the archive.")
+            ]),
+            folder("PICTURES", "30 DEC 1999", [
+              file("HOLLVANIA_STREET.PNG", "PNG Image", 3180000, "30 DEC 1999 22:03"),
+              file("CONTACT_SHEET.PNG", "PNG Image", 7140000, "30 DEC 1999 20:44")
+            ]),
+            folder("MUSIC", "29 DEC 1999", [
+              file("STATIC_DREAMS.MP4", "Audio / Video", 41200000, "29 DEC 1999 23:15"),
+              file("NIGHT_DRIVE.MP4", "Audio / Video", 52800000, "29 DEC 1999 21:39")
+            ]),
+            folder("SYSTEM", "28 DEC 1999", [
+              file("POM2_SHELL.EXE", "Application", 84200000, "28 DEC 1999 14:12"),
+              file("DEVICE_CONFIG.TXT", "Configuration File", 924, "28 DEC 1999 14:09",
+                "DISPLAY=CRT\nCOLOR_MODE=PHOSPHOR\nLINK=SECURE")
+            ])
+          ])
+        ])
+      ]),
+      folder("EXTERNAL MEDIA", "31 DEC 1999", [
+        folder("FLOPPY_A:", "31 DEC 1999", [
+          file("READ_ME_FIRST.TXT", "Text Document", 1120, "31 DEC 1999 10:11",
+            "This disk contains archived transfer records.")
+        ])
+      ])
+    ]);
+
+    const explorer = document.getElementById("explorer");
+    const addressInput = document.getElementById("addressInput");
+    const fileRows = document.getElementById("fileRows");
+    const gridView = document.getElementById("gridView");
+    const emptyFolder = document.getElementById("emptyFolder");
+    const inspectorContent = document.getElementById("inspectorContent");
+    const fileTable = document.getElementById("fileTable");
+    const toast = document.getElementById("toast");
+
+    let currentNode = fileSystem.children[0].children[0].children[0].children[0];
+    let selectedNode = null;
+    let selectedElement = null;
+    let gridMode = false;
+    let sortField = "name";
+    let sortAscending = true;
+    let history = [currentNode];
+    let historyIndex = 0;
+    let toastTimer;
+
+    function pathFor(node) {
+      const parts = [];
+      let current = node;
+
+      while (current && current !== fileSystem) {
+        parts.unshift(current.name);
+        current = findParent(current);
+      }
+
+      if (parts[0] === "C:") {
+        return parts.join("\\") + "\\";
+      }
+
+      return parts.join("\\") + (parts.length ? "\\" : "");
+    }
+
+    function findParent(target, node = fileSystem) {
+      if (!node.children) return null;
+
+      for (const child of node.children) {
+        if (child === target) return node;
+        const found = findParent(target, child);
+        if (found) return found;
+      }
+
+      return null;
+    }
+
+    function formatSize(bytes) {
+      if (!bytes) return "—";
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+    }
+
+    function iconFor(node) {
+      if (node.type === "folder") return "▰";
+
+      const ext = node.name.split(".").pop().toLowerCase();
+      const icons = {
+        exe: "▣",
+        txt: "▤",
+        mp4: "▶",
+        zip: "▧",
+        png: "▧"
+      };
+
+      return icons[ext] || "▧";
+    }
+
+    function nodeType(node) {
+      if (node.type === "folder") return "File Folder";
+      return node.type || "File";
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("visible"), 2200);
+    }
+
+    function allTreeEntries(node = fileSystem, depth = 0, entries = []) {
+      if (!node.children) return entries;
+
+      node.children.forEach((child) => {
+        if (child.type === "folder") {
+          entries.push({ node: child, depth });
+          allTreeEntries(child, depth + 1, entries);
+        }
+      });
+
+      return entries;
+    }
+
+    function renderTree() {
+      const tree = document.getElementById("tree");
+      tree.innerHTML = "";
+
+      allTreeEntries().forEach(({ node, depth }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `tree-item${node === currentNode ? " active" : ""}`;
+        button.style.paddingLeft = `${5 + depth * 10}px`;
+        button.title = pathFor(node);
+
+        const indent = depth ? '<span class="tree-indent" aria-hidden="true"></span>' : "";
+        button.innerHTML =
+          `${indent}<span class="folder-icon" aria-hidden="true">${iconFor(node)}</span><span>${node.name}</span>`;
+
+        button.addEventListener("click", () => navigateTo(node));
+        tree.appendChild(button);
+      });
+    }
+
+    function sortedChildren() {
+      const children = [...(currentNode.children || [])];
+
+      children.sort((a, b) => {
+        if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+
+        let result;
+
+        if (sortField === "size") {
+          result = a.size - b.size;
+        } else {
+          result = String(a[sortField] || a.name)
+            .localeCompare(String(b[sortField] || b.name));
+        }
+
+        return sortAscending ? result : -result;
+      });
+
+      return children;
+    }
+
+    function clearSelection() {
+      selectedNode = null;
+      selectedElement = null;
+      document.getElementById("selectedSize").textContent = "NO SELECTION";
+    }
+
+    function selectNode(node, element) {
+      if (selectedElement) selectedElement.classList.remove("selected");
+
+      selectedNode = node;
+      selectedElement = element;
+      element.classList.add("selected");
+
+      renderInspector(node);
+
+      document.getElementById("selectedSize").textContent =
+        node.type === "folder" ? "FOLDER" : formatSize(node.size).toUpperCase();
+    }
+
+    function renderFiles() {
+      clearSelection();
+      fileRows.innerHTML = "";
+      gridView.innerHTML = "";
+
+      const children = sortedChildren();
+      const hasItems = children.length > 0;
+
+      emptyFolder.style.display = hasItems ? "none" : "block";
+      fileTable.style.display = gridMode ? "none" : "table";
+      gridView.classList.toggle("active", gridMode);
+
+      document.getElementById("viewLabel").textContent =
+        gridMode ? "GRID VIEW" : "LIST VIEW";
+
+      document.getElementById("folderSummary").textContent =
+        `${children.length} OBJECT${children.length === 1 ? "" : "S"} IN ${currentNode.name}`;
+
+      children.forEach((node) => {
+        if (gridMode) {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "grid-item";
+          item.innerHTML =
+            `<span class="file-icon" aria-hidden="true">${iconFor(node)}</span><span>${node.name}</span>`;
+
+          item.addEventListener("click", () => selectNode(node, item));
+          item.addEventListener("dblclick", () => {
+            if (node.type === "folder") navigateTo(node);
+          });
+
+          gridView.appendChild(item);
+        } else {
+          const row = document.createElement("tr");
+          row.className = "file-row";
+
+          row.innerHTML = `
+            <td>
+              <span class="file-name-cell">
+                <span class="file-icon" aria-hidden="true">${iconFor(node)}</span>
+                ${node.name}
+              </span>
+            </td>
+            <td>${node.modified}</td>
+            <td>${nodeType(node)}</td>
+            <td>${node.type === "folder" ? "—" : formatSize(node.size)}</td>
+          `;
+
+          row.addEventListener("click", () => selectNode(node, row));
+          row.addEventListener("dblclick", () => {
+            if (node.type === "folder") navigateTo(node);
+          });
+
+          fileRows.appendChild(row);
+        }
+      });
+
+      document.getElementById("itemCount").textContent =
+        `${children.length} OBJECT${children.length === 1 ? "" : "S"}`;
+
+      addressInput.value = pathFor(currentNode);
+      renderTree();
+      renderInspector(null);
+      updateNavigationButtons();
+    }
+
+    function renderInspector(node) {
+      if (!node) {
+        inspectorContent.innerHTML = `
+          <div class="preview"><span class="preview-icon">▤</span></div>
+          <p class="preview-hint">
+            Select a file or folder to inspect its contents and properties.
+          </p>
+        `;
+        return;
+      }
+
+      let previewMarkup = `<span class="preview-icon">${iconFor(node)}</span>`;
+
+      if (node.type !== "folder" && node.content) {
+        previewMarkup = `<pre class="preview-text"></pre>`;
+      } else if (node.type === "folder") {
+        previewMarkup = `<span class="preview-icon">▰</span>`;
+      }
+
+      inspectorContent.innerHTML = `
+        <div class="preview${node.type === "folder" ? " folder" : ""}">
+          ${previewMarkup}
+        </div>
+        <h2 class="preview-name">${node.name}</h2>
+        <dl class="property-list">
+          <div class="property-row">
+            <dt>Type</dt>
+            <dd>${nodeType(node)}</dd>
+          </div>
+          <div class="property-row">
+            <dt>Modified</dt>
+            <dd>${node.modified}</dd>
+          </div>
+          <div class="property-row">
+            <dt>Size</dt>
+            <dd>${node.type === "folder" ? "—" : formatSize(node.size)}</dd>
+          </div>
+          <div class="property-row">
+            <dt>Permissions</dt>
+            <dd>READ / WRITE</dd>
+          </div>
+          <div class="property-row">
+            <dt>Location</dt>
+            <dd>${pathFor(currentNode)}</dd>
+          </div>
+        </dl>
+      `;
+
+      if (node.content) {
+        inspectorContent.querySelector(".preview-text").textContent = node.content;
+      }
+    }
+
+    function updateNavigationButtons() {
+      document.getElementById("backButton").disabled = historyIndex <= 0;
+      document.getElementById("forwardButton").disabled =
+        historyIndex >= history.length - 1;
+      document.getElementById("upButton").disabled =
+        !findParent(currentNode);
+    }
+
+    function navigateTo(node, addToHistory = true) {
+      if (!node || node.type !== "folder") return;
+
+      currentNode = node;
+
+      if (addToHistory) {
+        history = history.slice(0, historyIndex + 1);
+        history.push(node);
+        historyIndex = history.length - 1;
+      }
+
+      renderFiles();
+    }
+
+    function navigatePath(path) {
+      const normalized = path
+        .trim()
+        .replaceAll("/", "\\")
+        .replace(/\\+$/, "")
+        .toLowerCase();
+
+      if (!normalized) return;
+
+      const parts = normalized.split("\\").filter(Boolean);
+      let node = fileSystem;
+
+      for (const part of parts) {
+        if (part === "computer" || part === "this pc") continue;
+
+        if (part === "users" || part === "user") {
+          node = node.children?.find((item) =>
+            item.name.toLowerCase() === "c:"
+          ) || node;
+          continue;
+        }
+
+        const next = node.children?.find((child) =>
+          child.name.toLowerCase() === part
+        );
+
+        if (!next || next.type !== "folder") {
+          showToast("PATH NOT FOUND IN DEMO FILE SYSTEM");
+          addressInput.value = pathFor(currentNode);
+          return;
+        }
+
+        node = next;
+      }
+
+      navigateTo(node);
+    }
+
+    document.getElementById("addressForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      navigatePath(addressInput.value);
+    });
+
+    document.getElementById("backButton").addEventListener("click", () => {
+      if (historyIndex > 0) {
+        historyIndex--;
+        currentNode = history[historyIndex];
+        renderFiles();
+      }
+    });
+
+    document.getElementById("forwardButton").addEventListener("click", () => {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        currentNode = history[historyIndex];
+        renderFiles();
+      }
+    });
+
+    document.getElementById("upButton").addEventListener("click", () => {
+      const parent = findParent(currentNode);
+      if (parent) navigateTo(parent);
+    });
+
+    document.getElementById("newFolderButton").addEventListener("click", () => {
+      const name = prompt("Enter a name for the new folder:", "NEW_FOLDER");
+      if (!name || !name.trim()) return;
+
+      const cleanName = name.trim();
+      const duplicate = currentNode.children.some(
+        (child) => child.name.toLowerCase() === cleanName.toLowerCase()
+      );
+
+      if (duplicate) {
+        showToast("AN ITEM WITH THAT NAME ALREADY EXISTS");
+        return;
+      }
+
+      currentNode.children.push(folder(cleanName, "31 DEC 1999 23:58"));
+      renderFiles();
+      showToast(`FOLDER CREATED: ${cleanName}`);
+    });
+
+    document.getElementById("deleteButton").addEventListener("click", () => {
+      if (!selectedNode) {
+        showToast("SELECT AN ITEM FIRST");
+        return;
+      }
+
+      const parent = findParent(selectedNode);
+      if (!parent) return;
+
+      const name = selectedNode.name;
+      parent.children = parent.children.filter(
+        (child) => child !== selectedNode
+      );
+
+      renderFiles();
+      showToast(`DELETED FROM DEMO: ${name}`);
+    });
+
+    document.getElementById("viewButton").addEventListener("click", (event) => {
+      gridMode = !gridMode;
+
+      event.currentTarget.querySelector(".button-label").textContent =
+        gridMode ? "List View" : "Grid View";
+
+      renderFiles();
+    });
+
+    document.querySelectorAll(".file-table th").forEach((header) => {
+      header.addEventListener("click", () => {
+        const field = header.dataset.sort;
+
+        if (sortField === field) {
+          sortAscending = !sortAscending;
+        } else {
+          sortField = field;
+          sortAscending = true;
+        }
+
+        renderFiles();
+      });
+    });
+
+    document.querySelectorAll(".menu-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const menu = button.dataset.menu;
+
+        if (menu === "View") {
+          document.getElementById("viewButton").click();
+          return;
+        }
+
+        if (menu === "File") {
+          document.getElementById("newFolderButton").click();
+          return;
+        }
+
+        if (menu === "Edit") {
+          showToast("SELECT AN ITEM TO CUT, COPY, OR DELETE");
+          return;
+        }
+
+        if (menu === "System") {
+          showToast("POM-2 SYSTEM STATUS: NOMINAL");
+          return;
+        }
+
+        showToast("POM-2 FILE MANAGER / DEMO BUILD 1.0");
+      });
+    });
+
+    document.getElementById("minimizeButton").addEventListener("click", () => {
+      explorer.classList.add("minimized");
+      document.getElementById("taskbar").classList.add("visible");
+    });
+
+    document.getElementById("restoreButton").addEventListener("click", () => {
+      explorer.classList.remove("minimized");
+      document.getElementById("taskbar").classList.remove("visible");
+    });
+
+    document.getElementById("maximizeButton").addEventListener("click", (event) => {
+      explorer.classList.toggle("maximized");
+
+      const isMaximized = explorer.classList.contains("maximized");
+
+      event.currentTarget.textContent = isMaximized ? "ᛞ" : "ᛜ";
+      event.currentTarget.setAttribute(
+        "aria-label",
+        isMaximized ? "Restore window" : "Maximize window"
+      );
+      event.currentTarget.title = isMaximized
+        ? "Restore (ᛞ)"
+        : "Maximize / restore (ᛜ)";
+    });
+
+    document.getElementById("closeButton").addEventListener("click", () => {
+      explorer.classList.add("minimized");
+      document.getElementById("taskbar").classList.remove("visible");
+      showToast("FILE MANAGER CLOSED — RELOAD THE PAGE TO REOPEN");
+    });
+
+    function updateClock() {
+      document.getElementById("clock").textContent =
+        new Date().toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).toUpperCase().replace(",", " //");
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    renderFiles();
+  </script>
+</body>
+</html>

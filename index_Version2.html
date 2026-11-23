@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d18">
+  <title>Zhaalthur OS</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <main class="os" id="os">
+    <div class="wallpaper" aria-hidden="true">
+      <div class="wallpaper-mark">ᛟ</div>
+      <div class="wallpaper-title">ZHAALTHUR</div>
+      <div class="wallpaper-subtitle">A system between worlds</div>
+    </div>
+
+    <header class="topbar">
+      <button class="brand-button" id="launcherButton" type="button" aria-label="Open launcher">
+        <span class="brand-glyph">ᛟ</span>
+        <span>ZHAALTHUR</span>
+      </button>
+
+      <div class="topbar-center" id="activeAppName">DESKTOP</div>
+
+      <div class="system-tray">
+        <button class="tray-button" id="notificationButton" type="button" aria-label="Notifications">◉</button>
+        <span class="tray-status"><i></i> SYSTEM NOMINAL</span>
+        <time id="clock">--:--</time>
+      </div>
+    </header>
+
+    <section class="desktop-area" id="desktopArea" aria-label="Desktop">
+      <nav class="desktop-icons" aria-label="Desktop applications">
+        <button class="desktop-icon" data-app="explorer" type="button">
+          <span class="icon-art folder-art">▰</span>
+          <span>File Explorer</span>
+        </button>
+        <button class="desktop-icon" data-app="settings" type="button">
+          <span class="icon-art settings-art">⚙</span>
+          <span>Settings</span>
+        </button>
+        <button class="desktop-icon" data-app="task-manager" type="button">
+          <span class="icon-art task-art">▥</span>
+          <span>Task Manager</span>
+        </button>
+      </nav>
+
+      <section class="window-layer" id="windowLayer" aria-label="Open applications"></section>
+
+      <aside class="launcher" id="launcher" aria-label="Application launcher" hidden>
+        <div class="launcher-heading">
+          <div>
+            <strong>APPLICATIONS</strong>
+            <span>Choose a system module</span>
+          </div>
+          <button class="small-close" id="closeLauncher" type="button" aria-label="Close launcher">×</button>
+        </div>
+
+        <label class="search-box">
+          <span>⌕</span>
+          <input id="appSearch" type="search" placeholder="Search applications..." autocomplete="off">
+        </label>
+
+        <div class="app-list" id="appList">
+          <button class="app-entry" data-app="explorer" type="button">
+            <span class="app-icon">▰</span><span><strong>File Explorer</strong><small>Browse the local demo files</small></span>
+          </button>
+          <button class="app-entry" data-app="settings" type="button">
+            <span class="app-icon">⚙</span><span><strong>Settings</strong><small>System and appearance</small></span>
+          </button>
+          <button class="app-entry" data-app="task-manager" type="button">
+            <span class="app-icon">▥</span><span><strong>Task Manager</strong><small>Processes and performance</small></span>
+          </button>
+        </div>
+
+        <div class="launcher-footer">
+          <span>OPERATOR: NIGHTGUARD</span>
+          <button id="lockButton" type="button">LOCK</button>
+        </div>
+      </aside>
+
+      <aside class="notification-panel" id="notificationPanel" hidden>
+        <div class="panel-heading">
+          <strong>NOTIFICATIONS</strong>
+          <button class="small-close" id="closeNotifications" type="button" aria-label="Close notifications">×</button>
+        </div>
+        <div class="notification-item">
+          <span class="notification-dot"></span>
+          <div><strong>System nominal</strong><small>Zhaalthur services are running.</small></div>
+        </div>
+        <div class="notification-item">
+          <span class="notification-dot amber"></span>
+          <div><strong>Preview mode</strong><small>Settings in this browser are simulated.</small></div>
+        </div>
+        <button class="clear-notifications" id="clearNotifications" type="button">DISMISS ALL</button>
+      </aside>
+    </section>
+
+    <footer class="taskbar">
+      <button class="taskbar-launcher" id="taskbarLauncher" type="button" aria-label="Open launcher">ᛟ</button>
+      <div class="taskbar-apps" id="taskbarApps"></div>
+      <div class="taskbar-right">
+        <span class="taskbar-health"><i></i> ONLINE</span>
+        <time id="taskbarClock">--:--</time>
+      </div>
+    </footer>
+
+    <section class="login-screen" id="loginScreen" aria-label="Zhaalthur login">
+      <div class="login-card">
+        <div class="login-mark">ᛟ</div>
+        <p class="login-overline">ZHAALTHUR SYSTEM</p>
+        <h1>Welcome back</h1>
+        <p class="login-user">NIGHTGUARD · OPERATOR</p>
+        <form id="loginForm">
+          <label for="operatorName">Operator name</label>
+          <input id="operatorName" value="NightGuard" autocomplete="username" required>
+          <label for="operatorPassword">Password</label>
+          <input id="operatorPassword" type="password" placeholder="Any password for preview" autocomplete="current-password">
+          <button class="login-submit" type="submit">ENTER SYSTEM <span>→</span></button>
+        </form>
+        <small class="login-note">BROWSER PREVIEW · NO PASSWORD IS STORED</small>
+      </div>
+    </section>
+
+    <section class="power-menu" id="powerMenu" hidden>
+      <div class="power-card">
+        <button class="small-close" id="closePowerMenu" type="button" aria-label="Close power menu">×</button>
+        <p>POWER OPTIONS</p>
+        <button data-power="Lock" type="button">ᛁ <span>Lock</span></button>
+        <button data-power="Sleep" type="button">◷ <span>Sleep</span></button>
+        <button data-power="Restart" type="button">↻ <span>Restart</span></button>
+        <button data-power="Shut down" type="button">⏻ <span>Shut down</span></button>
+      </div>
+    </section>
+
+    <button class="power-button" id="powerButton" type="button" aria-label="Power options">⏻</button>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+</body>
+</html>

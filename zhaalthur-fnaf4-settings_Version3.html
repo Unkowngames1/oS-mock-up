@@ -1,0 +1,1131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zhaalthur — Settings</title>
+
+<style>
+:root {
+  --bg:#070d1c;
+  --sidebar:#090d1d;
+  --card:#10172b;
+  --card-light:#141d37;
+  --red:#bf2028;
+  --red-bright:#df252d;
+  --text:#dddbe7;
+  --muted:#77768a;
+  --line:rgba(180,36,43,.13);
+  --bedroom-blue:#151f3c;
+}
+
+* { box-sizing:border-box; }
+
+html,body {
+  width:100%;
+  height:100%;
+  margin:0;
+  overflow:hidden;
+}
+
+body {
+  color:var(--text);
+  background:#050813;
+  font-family:"Segoe UI",Arial,sans-serif;
+  font-size:14px;
+}
+
+button,input,select {
+  font:inherit;
+}
+
+button { color:inherit; }
+
+.room {
+  position:relative;
+  isolation:isolate;
+  width:100%;
+  height:100vh;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at 78% 35%,rgba(72,90,146,.16),transparent 22rem),
+    linear-gradient(90deg,#11101c 0,#10162b 60%,#070d1d 100%);
+}
+
+.room::before {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  background:
+    repeating-linear-gradient(90deg,
+      transparent 0 118px,
+      rgba(90,115,164,.035) 119px 124px,
+      transparent 125px 180px),
+    linear-gradient(90deg,
+      rgba(94,8,22,.22),
+      transparent 30%,
+      transparent 72%,
+      rgba(31,45,92,.11));
+  box-shadow:inset 0 0 100px rgba(0,0,0,.45);
+}
+
+.room::after {
+  content:"";
+  position:absolute;
+  z-index:20;
+  inset:0;
+  pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,.012) 0 1px,
+      transparent 1px 4px),
+    radial-gradient(ellipse,transparent 62%,rgba(0,0,0,.38) 100%);
+}
+
+.settings-window {
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  height:100%;
+  background:rgba(7,12,29,.87);
+}
+
+.settings-window.minimized {
+  display:none;
+}
+
+.titlebar {
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:55px;
+  flex:0 0 55px;
+  padding:0 14px 0 16px;
+  border-bottom:1px solid rgba(151,31,38,.09);
+  background:rgba(7,10,23,.92);
+}
+
+.title {
+  display:flex;
+  align-items:center;
+  gap:13px;
+  color:var(--red);
+  font-size:13px;
+}
+
+.gear {
+  position:relative;
+  width:21px;
+  height:21px;
+  border:2px solid var(--red);
+  border-radius:50%;
+  box-shadow:0 0 9px rgba(198,31,39,.12);
+}
+
+.gear::before,
+.gear::after {
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:31px;
+  height:3px;
+  transform:translate(-50%, -50%);
+  background:
+    linear-gradient(90deg,
+      var(--red) 0 13%,
+      transparent 13% 87%,
+      var(--red) 87%);
+}
+
+.gear::after {
+  transform:translate(-50%, -50%) rotate(90deg);
+}
+
+.window-controls {
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.window-control {
+  display:grid;
+  place-items:center;
+  width:31px;
+  height:31px;
+  border:0;
+  color:var(--red);
+  background:transparent;
+  font:19px Georgia,serif;
+  cursor:pointer;
+}
+
+.window-control:hover {
+  background:rgba(191,32,40,.09);
+  text-shadow:0 0 8px var(--red);
+}
+
+.window-control.close {
+  color:var(--red-bright);
+  font:18px "Segoe UI",sans-serif;
+}
+
+.window-control.close:hover {
+  background:rgba(191,32,40,.16);
+  color:#ff777c;
+}
+
+.layout {
+  display:grid;
+  grid-template-columns:230px minmax(0,1fr);
+  flex:1;
+  min-height:0;
+}
+
+.sidebar {
+  min-height:0;
+  overflow:hidden;
+  padding-top:95px;
+  border-right:1px solid rgba(151,31,38,.08);
+  background:
+    linear-gradient(90deg,rgba(95,17,32,.11),transparent),
+    rgba(8,12,27,.44);
+}
+
+.nav-item {
+  position:relative;
+  display:grid;
+  grid-template-columns:27px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  width:100%;
+  height:45px;
+  padding:0 12px;
+  border:0;
+  border-radius:4px;
+  color:#a51d25;
+  background:transparent;
+  text-align:left;
+  cursor:pointer;
+  font-size:13px;
+  transition:120ms ease;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color:#d52a31;
+  background:rgba(156,33,43,.08);
+}
+
+.nav-item.active::before {
+  content:"";
+  position:absolute;
+  left:0;
+  top:7px;
+  bottom:7px;
+  width:3px;
+  background:var(--red-bright);
+  box-shadow:0 0 7px rgba(223,37,45,.25);
+}
+
+.nav-icon {
+  display:grid;
+  place-items:center;
+  width:21px;
+  height:21px;
+  color:currentColor;
+  font-size:17px;
+}
+
+.main {
+  min-width:0;
+  min-height:0;
+  overflow:auto;
+  padding:14px 30px 32px;
+  background:
+    radial-gradient(ellipse at 68% 18%,rgba(63,82,144,.10),transparent 22rem),
+    rgba(8,13,29,.28);
+}
+
+.page { display:none; }
+.page.active { display:block; }
+
+.home-title {
+  height:67px;
+  display:flex;
+  align-items:center;
+  color:#ddd9e3;
+  font-size:25px;
+  font-weight:400;
+  letter-spacing:.2px;
+}
+
+.profile-card {
+  display:flex;
+  align-items:center;
+  gap:18px;
+  height:94px;
+  margin-bottom:31px;
+  padding:10px 17px;
+  border:1px solid rgba(90,111,160,.10);
+  background:
+    linear-gradient(90deg,
+      rgba(5,9,22,.96) 0,
+      rgba(12,19,38,.84) 35%,
+      rgba(30,42,76,.56) 100%);
+  box-shadow:inset 0 0 30px rgba(0,0,0,.25);
+}
+
+.profile-avatar {
+  position:relative;
+  width:126px;
+  height:74px;
+  flex:0 0 126px;
+  overflow:hidden;
+  border:1px solid rgba(159,43,51,.13);
+  background:
+    radial-gradient(circle at 19% 35%,#5d171d 0 2px,transparent 3px),
+    radial-gradient(circle at 29% 35%,#5d171d 0 2px,transparent 3px),
+    repeating-linear-gradient(90deg,
+      transparent 0 28px,
+      rgba(83,100,148,.05) 29px 31px),
+    linear-gradient(145deg,#101830,#080d1d);
+}
+
+.profile-avatar::before {
+  content:"";
+  position:absolute;
+  left:43%;
+  bottom:-34%;
+  width:58px;
+  height:79px;
+  border:2px solid rgba(154,38,48,.28);
+  border-radius:50%;
+  background:#080c1c;
+  transform:rotate(-8deg);
+}
+
+.profile-avatar::after {
+  content:"";
+  position:absolute;
+  left:26%;
+  bottom:2px;
+  width:97px;
+  height:15px;
+  background:linear-gradient(90deg,#080b19,#1b2342);
+  box-shadow:0 -5px 12px #070914;
+}
+
+.profile-copy strong {
+  display:block;
+  color:#dddbe5;
+  font-size:15px;
+  font-weight:400;
+}
+
+.profile-copy span {
+  display:block;
+  margin-top:6px;
+  color:#bdbaca;
+  font-size:12px;
+}
+
+.profile-copy small {
+  display:block;
+  margin-top:7px;
+  color:#77768a;
+  font-size:11px;
+}
+
+.card-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+  max-width:690px;
+}
+
+.card {
+  min-width:0;
+  min-height:224px;
+  border:1px solid rgba(122,130,169,.07);
+  background:rgba(16,23,43,.82);
+  box-shadow:inset 0 0 26px rgba(0,0,0,.10);
+}
+
+.card.small {
+  min-height:195px;
+}
+
+.card h2 {
+  margin:0;
+  padding:15px 18px 2px;
+  color:#d1cede;
+  font-size:16px;
+  font-weight:400;
+}
+
+.card-subtitle {
+  margin:0;
+  padding:0 18px 10px;
+  color:#77758b;
+  font-size:12px;
+}
+
+.setting-row {
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) 24px;
+  align-items:center;
+  min-height:50px;
+  margin:0 18px;
+  border-top:1px solid rgba(145,153,183,.055);
+  color:#cccbd7;
+  cursor:pointer;
+  transition:120ms ease;
+}
+
+.setting-row:hover {
+  color:#f0edf0;
+  background:linear-gradient(90deg,rgba(191,32,40,.05),transparent);
+}
+
+.setting-row strong {
+  font-size:13px;
+  font-weight:400;
+}
+
+.row-icon {
+  color:#aaaabd;
+  font-size:21px;
+  text-align:center;
+}
+
+.row-arrow {
+  color:#77758b;
+  font-size:20px;
+  text-align:right;
+}
+
+.devices-card h2 {
+  padding-bottom:3px;
+}
+
+.device-row {
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) 24px;
+  align-items:center;
+  min-height:61px;
+  margin:0 18px;
+  border-top:1px solid rgba(145,153,183,.055);
+  cursor:pointer;
+}
+
+.device-row:hover {
+  background:rgba(191,32,40,.025);
+}
+
+.device-icon {
+  color:#aaaabd;
+  font-size:24px;
+  text-align:center;
+}
+
+.device-copy strong {
+  display:block;
+  color:#c4c2d3;
+  font-size:12px;
+  font-weight:400;
+}
+
+.device-copy span {
+  display:block;
+  margin-top:5px;
+  color:#77758b;
+  font-size:11px;
+}
+
+.view-devices {
+  min-height:38px;
+  margin-bottom:0;
+  border-top:0;
+}
+
+.personalization-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
+  padding:4px 18px 15px;
+}
+
+.personal-card {
+  position:relative;
+  height:88px;
+  overflow:hidden;
+  border:1px solid rgba(122,133,178,.14);
+  background:
+    linear-gradient(165deg,#1c315c,#11182d 55%,#090c18);
+  cursor:pointer;
+}
+
+.personal-card.selected {
+  border:2px solid #b9262d;
+  box-shadow:0 0 12px rgba(191,32,40,.12);
+}
+
+.personal-card::before {
+  content:"";
+  position:absolute;
+  left:5%;
+  bottom:0;
+  width:90%;
+  height:22%;
+  background:#080d1b;
+  box-shadow:0 -18px 28px #10182d;
+  clip-path:polygon(0 30%,45% 0,100% 35%,100% 100%,0 100%);
+}
+
+.personal-card::after {
+  content:"";
+  position:absolute;
+  right:21%;
+  bottom:35%;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#c94a55;
+  box-shadow:0 0 7px #c94a55;
+}
+
+.personal-card.door {
+  background:linear-gradient(90deg,#151e3d,#26376e 70%,#11172d);
+}
+
+.personal-card.closet {
+  background:
+    linear-gradient(90deg,#11162b 0 48%,#273362 49% 52%,#11162b 53%);
+}
+
+.update-content {
+  padding:0 18px;
+}
+
+.update-row {
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr);
+  align-items:center;
+  min-height:67px;
+  border-top:1px solid rgba(145,153,183,.055);
+  border-bottom:1px solid rgba(145,153,183,.055);
+}
+
+.update-icon {
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  border:3px solid var(--red);
+  border-right-color:transparent;
+  border-radius:50%;
+  color:var(--red);
+  font-size:12px;
+}
+
+.update-copy strong {
+  display:block;
+  color:#c4c2d3;
+  font-size:12px;
+  font-weight:400;
+}
+
+.update-copy span {
+  display:block;
+  margin-top:5px;
+  color:#77758b;
+  font-size:11px;
+}
+
+.check-button {
+  margin-top:13px;
+  padding:0;
+  border:0;
+  color:#c7c5d4;
+  background:transparent;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.check-button:hover {
+  color:#ece9dd;
+}
+
+.detail-panel {
+  max-width:690px;
+  min-height:360px;
+  padding:22px;
+  border:1px solid rgba(122,130,169,.08);
+  background:rgba(16,23,43,.78);
+}
+
+.detail-panel h1 {
+  margin:0 0 18px;
+  font-size:24px;
+  font-weight:400;
+}
+
+.setting-control {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  min-height:68px;
+  border-bottom:1px solid rgba(145,153,183,.07);
+}
+
+.setting-control strong {
+  display:block;
+  font-size:12px;
+  font-weight:400;
+}
+
+.setting-control span {
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:11px;
+}
+
+.toggle {
+  position:relative;
+  width:42px;
+  height:22px;
+  flex:0 0 42px;
+  border:1px solid #666a80;
+  border-radius:20px;
+  background:#171c31;
+  cursor:pointer;
+}
+
+.toggle::before {
+  content:"";
+  position:absolute;
+  left:3px;
+  top:3px;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:#777b91;
+  transition:150ms ease;
+}
+
+.toggle[aria-checked="true"] {
+  border-color:#ba3036;
+  background:rgba(191,32,40,.12);
+}
+
+.toggle[aria-checked="true"]::before {
+  left:22px;
+  background:var(--red);
+  box-shadow:0 0 8px rgba(191,32,40,.5);
+}
+
+.range-row {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:210px;
+}
+
+.range-row input {
+  width:100%;
+  accent-color:var(--red);
+}
+
+.range-row output {
+  min-width:36px;
+  color:#c7c4d5;
+  font-size:11px;
+  text-align:right;
+}
+
+.taskbar {
+  position:fixed;
+  z-index:40;
+  bottom:12px;
+  left:50%;
+  display:none;
+  align-items:center;
+  gap:9px;
+  height:40px;
+  padding:5px 9px;
+  transform:translateX(-50%);
+  border:1px solid rgba(191,32,40,.3);
+  background:rgba(7,10,20,.96);
+  color:var(--muted);
+  font-size:10px;
+}
+
+.taskbar.visible { display:flex; }
+
+.taskbar button {
+  height:27px;
+  border:1px solid var(--line);
+  color:var(--red);
+  background:rgba(191,32,40,.06);
+  cursor:pointer;
+}
+
+.toast {
+  position:fixed;
+  z-index:50;
+  right:18px;
+  bottom:18px;
+  min-width:220px;
+  padding:10px 13px;
+  border:1px solid rgba(191,32,40,.35);
+  color:#ddd8e8;
+  background:#101521;
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(8px);
+  transition:160ms ease;
+  font-size:11px;
+}
+
+.toast.visible {
+  opacity:1;
+  transform:translateY(0);
+}
+
+@media (max-width:860px) {
+  .layout { grid-template-columns:175px minmax(0,1fr); }
+  .sidebar { padding-top:55px; }
+  .main { padding:12px 16px; }
+  .card-grid { grid-template-columns:1fr; max-width:none; }
+  .profile-avatar { width:105px; flex-basis:105px; }
+}
+
+@media (max-width:560px) {
+  .layout { grid-template-columns:55px minmax(0,1fr); }
+  .sidebar { padding:20px 4px; }
+  .nav-item {
+    display:grid;
+    grid-template-columns:1fr;
+    justify-items:center;
+    padding:0;
+  }
+  .nav-item span:last-child { display:none; }
+  .main { padding:8px 10px; }
+  .profile-heading,.profile-card { height:82px; }
+  .profile-avatar { width:75px; flex-basis:75px; }
+  .profile-copy small { display:none; }
+  .card-grid { grid-template-columns:1fr; }
+  .personalization-grid { grid-template-columns:1fr; }
+  .range-row { width:150px; }
+}
+</style>
+</head>
+
+<body>
+<main class="room">
+  <section class="settings-window" id="settingsWindow">
+    <header class="titlebar">
+      <div class="title">
+        <span class="gear"></span>
+        <span>Settings</span>
+      </div>
+
+      <div class="window-controls">
+        <button class="window-control" id="minimizeButton" title="Minimize">ᛁ</button>
+        <button class="window-control" id="maximizeButton" title="Maximize">ᛜ</button>
+        <button class="window-control close" id="closeButton" title="Close">×</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <nav>
+          <button class="nav-item active" data-page="home">
+            <span class="nav-icon">⌂</span><span>Home</span>
+          </button>
+
+          <button class="nav-item" data-page="system">
+            <span class="nav-icon">▣</span><span>System</span>
+          </button>
+
+          <button class="nav-item" data-page="devices">
+            <span class="nav-icon">◉</span><span>Bluetooth &amp; devices</span>
+          </button>
+
+          <button class="nav-item" data-page="network">
+            <span class="nav-icon">≋</span><span>Network &amp; internet</span>
+          </button>
+
+          <button class="nav-item" data-page="personalization">
+            <span class="nav-icon">╱</span><span>Personalization</span>
+          </button>
+
+          <button class="nav-item" data-page="apps">
+            <span class="nav-icon">▦</span><span>Apps</span>
+          </button>
+
+          <button class="nav-item" data-page="accounts">
+            <span class="nav-icon">●</span><span>Accounts</span>
+          </button>
+
+          <button class="nav-item" data-page="time">
+            <span class="nav-icon">◷</span><span>Time &amp; language</span>
+          </button>
+
+          <button class="nav-item" data-page="gaming">
+            <span class="nav-icon">⌁</span><span>Gaming</span>
+          </button>
+
+          <button class="nav-item" data-page="accessibility">
+            <span class="nav-icon">♿</span><span>Accessibility</span>
+          </button>
+
+          <button class="nav-item" data-page="privacy">
+            <span class="nav-icon">⬟</span><span>Privacy &amp; security</span>
+          </button>
+
+          <button class="nav-item" data-page="update">
+            <span class="nav-icon">↻</span><span>Windows Update</span>
+          </button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <article class="page active" id="page-home">
+          <div class="home-title">Home</div>
+
+          <section class="profile-card">
+            <div class="profile-avatar"></div>
+            <div class="profile-copy">
+              <strong>NightGuard</strong>
+              <span>FreddyPC</span>
+              <small>Good night</small>
+            </div>
+          </section>
+
+          <div class="card-grid">
+            <section class="card small">
+              <h2>Recommended settings</h2>
+              <p class="card-subtitle">Things to keep in check...</p>
+
+              <div class="setting-row" data-open="system">
+                <span class="row-icon">▣</span>
+                <strong>Display</strong>
+                <span class="row-arrow">›</span>
+              </div>
+
+              <div class="setting-row" data-open="sound">
+                <span class="row-icon">◖</span>
+                <strong>Sound</strong>
+                <span class="row-arrow">›</span>
+              </div>
+
+              <div class="setting-row" data-open="notifications">
+                <span class="row-icon">♧</span>
+                <strong>Notifications</strong>
+                <span class="row-arrow">›</span>
+              </div>
+            </section>
+
+            <section class="card devices-card">
+              <h2>Bluetooth &amp; devices</h2>
+              <p class="card-subtitle">Connect what keeps you company.</p>
+
+              <div class="device-row" data-open="devices">
+                <span class="device-icon">⚙</span>
+                <span class="device-copy">
+                  <strong>Fredbear Controller</strong>
+                  <span>Paired</span>
+                </span>
+                <span class="row-arrow">›</span>
+              </div>
+
+              <div class="device-row" data-open="devices">
+                <span class="device-icon">◉</span>
+                <span class="device-copy">
+                  <strong>Nightmare Headset</strong>
+                  <span>Not connected</span>
+                </span>
+                <span class="row-arrow">›</span>
+              </div>
+
+              <div class="setting-row view-devices" data-open="devices">
+                <span></span>
+                <strong>View all devices</strong>
+                <span></span>
+              </div>
+            </section>
+
+            <section class="card">
+              <h2>Personalization</h2>
+              <p class="card-subtitle">Make it feel like home.</p>
+
+              <div class="personalization-grid">
+                <button class="personal-card selected" data-theme="Fredbear room"></button>
+                <button class="personal-card door" data-theme="Left hallway"></button>
+                <button class="personal-card closet" data-theme="Closet darkness"></button>
+              </div>
+            </section>
+
+            <section class="card">
+              <h2>Windows Update</h2>
+              <p class="card-subtitle">Stay protected. Stay alive.</p>
+
+              <div class="update-content">
+                <div class="update-row">
+                  <span class="update-icon">↻</span>
+                  <span class="update-copy">
+                    <strong>You're up to date</strong>
+                    <span>Last checked: Today, 3:00 AM</span>
+                  </span>
+                </div>
+                <button class="check-button" id="checkUpdates">Check for updates</button>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="page" id="page-system">
+          <div class="detail-panel">
+            <h1>System</h1>
+
+            <div class="setting-control">
+              <div>
+                <strong>Flashlight brightness</strong>
+                <span>Adjust the active screen illumination.</span>
+              </div>
+              <div class="range-row">
+                <input type="range" min="0" max="100" value="68" data-output="brightnessValue">
+                <output id="brightnessValue">68%</output>
+              </div>
+            </div>
+
+            <div class="setting-control">
+              <div>
+                <strong>Night mode</strong>
+                <span>Use a darker bedroom color profile.</span>
+              </div>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="Night mode"></button>
+            </div>
+
+            <div class="setting-control">
+              <div>
+                <strong>CRT scanlines</strong>
+                <span>Add a worn monitor texture.</span>
+              </div>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="CRT scanlines"></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="page" id="page-devices">
+          <div class="detail-panel">
+            <h1>Bluetooth &amp; devices</h1>
+
+            <div class="setting-control">
+              <div><strong>Fredbear Controller</strong><span>Paired</span></div>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="Fredbear Controller"></button>
+            </div>
+
+            <div class="setting-control">
+              <div><strong>Nightmare Headset</strong><span>Not connected</span></div>
+              <button class="toggle" role="switch" aria-checked="false" aria-label="Nightmare Headset"></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="page" id="page-personalization">
+          <div class="detail-panel">
+            <h1>Personalization</h1>
+
+            <div class="personalization-grid" style="padding:0 0 24px">
+              <button class="personal-card selected" data-theme="Fredbear room"></button>
+              <button class="personal-card door" data-theme="Left hallway"></button>
+              <button class="personal-card closet" data-theme="Closet darkness"></button>
+            </div>
+
+            <div class="setting-control">
+              <div>
+                <strong>Flashlight warmth</strong>
+                <span>Adjust the amber menu glow.</span>
+              </div>
+              <div class="range-row">
+                <input type="range" min="0" max="100" value="62" data-output="warmthValue">
+                <output id="warmthValue">62%</output>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="page" id="page-update">
+          <div class="detail-panel">
+            <h1>Windows Update</h1>
+
+            <div class="setting-control">
+              <div><strong>System status</strong><span>You're up to date.</span></div>
+              <span>Last checked: Today, 3:00 AM</span>
+            </div>
+
+            <div class="setting-control">
+              <div><strong>Automatic updates</strong><span>Keep the bedroom systems protected.</span></div>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="Automatic updates"></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="page" id="page-sound">
+          <div class="detail-panel">
+            <h1>Sound</h1>
+
+            <div class="setting-control">
+              <div><strong>Listen for breathing</strong><span>Enable nearby breathing alerts.</span></div>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="Breathing alerts"></button>
+            </div>
+
+            <div class="setting-control">
+              <div><strong>System volume</strong><span>Master interface volume.</span></div>
+              <div class="range-row">
+                <input type="range" min="0" max="100" value="58" data-output="volumeValue">
+                <output id="volumeValue">58%</output>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="page" id="page-notifications">
+          <div class="detail-panel">
+            <h1>Notifications</h1>
+            <div class="setting-control">
+              <div><strong>Nightly alerts</strong><span>Receive system warnings after midnight.</span></div>
+              <button class="toggle" role="switch" aria-checked="true" aria-label="Nightly alerts"></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="page" id="page-network">
+          <div class="detail-panel"><h1>Network &amp; internet</h1><p>Secure maintenance connection.</p></div>
+        </article>
+
+        <article class="page" id="page-apps">
+          <div class="detail-panel"><h1>Apps</h1><p>Installed Zhaalthur applications.</p></div>
+        </article>
+
+        <article class="page" id="page-accounts">
+          <div class="detail-panel"><h1>Accounts</h1><p>NightGuard operator profile.</p></div>
+        </article>
+
+        <article class="page" id="page-time">
+          <div class="detail-panel"><h1>Time &amp; language</h1><p>12:00 AM · Night 1</p></div>
+        </article>
+
+        <article class="page" id="page-gaming">
+          <div class="detail-panel"><h1>Gaming</h1><p>Fredbear performance controls.</p></div>
+        </article>
+
+        <article class="page" id="page-accessibility">
+          <div class="detail-panel"><h1>Accessibility</h1><p>Display, audio, and input assistance.</p></div>
+        </article>
+
+        <article class="page" id="page-privacy">
+          <div class="detail-panel"><h1>Privacy &amp; security</h1><p>Door and closet monitoring.</p></div>
+        </article>
+      </main>
+    </div>
+  </section>
+</main>
+
+<div class="taskbar" id="taskbar">
+  <span>MINIMIZED</span>
+  <button id="restoreButton">ZHAALTHUR // SETTINGS</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const settingsWindow = document.getElementById("settingsWindow");
+const toast = document.getElementById("toast");
+let toastTimer;
+
+function notify(message) {
+  toast.textContent = message;
+  toast.classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("visible"), 2200);
+}
+
+function openPage(name) {
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.classList.toggle("active", item.dataset.page === name);
+  });
+
+  document.querySelectorAll(".page").forEach(page => {
+    page.classList.toggle("active", page.id === `page-${name}`);
+  });
+}
+
+document.querySelectorAll(".nav-item").forEach(item => {
+  item.addEventListener("click", () => openPage(item.dataset.page));
+});
+
+document.querySelectorAll("[data-open]").forEach(row => {
+  row.addEventListener("click", () => openPage(row.dataset.open));
+});
+
+document.querySelectorAll(".toggle").forEach(toggle => {
+  toggle.addEventListener("click", () => {
+    const enabled = toggle.getAttribute("aria-checked") !== "true";
+    toggle.setAttribute("aria-checked", String(enabled));
+  });
+});
+
+document.querySelectorAll('input[type="range"][data-output]').forEach(range => {
+  const output = document.getElementById(range.dataset.output);
+  range.addEventListener("input", () => {
+    output.textContent = `${range.value}%`;
+  });
+});
+
+document.querySelectorAll(".personal-card").forEach(card => {
+  card.addEventListener("click", () => {
+    const group = card.parentElement;
+    group.querySelectorAll(".personal-card").forEach(item => {
+      item.classList.remove("selected");
+    });
+    card.classList.add("selected");
+    notify(`${card.dataset.theme} selected`);
+  });
+});
+
+document.getElementById("checkUpdates").addEventListener("click", () => {
+  notify("Checking for security updates...");
+});
+
+document.getElementById("minimizeButton").addEventListener("click", () => {
+  settingsWindow.classList.add("minimized");
+  document.getElementById("taskbar").classList.add("visible");
+});
+
+document.getElementById("restoreButton").addEventListener("click", () => {
+  settingsWindow.classList.remove("minimized");
+  document.getElementById("taskbar").classList.remove("visible");
+});
+
+document.getElementById("maximizeButton").addEventListener("click", () => {
+  const maximized = settingsWindow.classList.toggle("maximized");
+  document.getElementById("maximizeButton").textContent = maximized ? "ᛞ" : "ᛜ";
+});
+
+document.getElementById("closeButton").addEventListener("click", () => {
+  settingsWindow.classList.add("minimized");
+  document.getElementById("taskbar").classList.remove("visible");
+  notify("SETTINGS CLOSED");
+});
+</script>
+</body>
+</html>
